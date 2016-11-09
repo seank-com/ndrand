@@ -1,0 +1,27 @@
+{
+  "name": "ndrand",
+  "version": "1.0.0",
+  "description": "A module to generate a nonuniform distribution of random numbers",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seank-com/ndrand.git"
+  },
+  "keywords": [
+    "random",
+    "nonuniform",
+    "distribution"
+  ],
+  "author": "Sean Kelly (http://www.seank.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/seank-com/ndrand/issues"
+  },
+  "homepage": "https://github.com/seank-com/ndrand#readme"
+}
