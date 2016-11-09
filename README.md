@@ -3,12 +3,23 @@ A class used to generate a nonuniform distribution of random numbers.
 
 ## Usage
 
+```
+var ndr = require('ndrand');
+
+ndr.initialize([
+  {x:0,y:0},
+  {x:5,y:5},
+  {x:10,y:0},
+]);
+
+console.log(ndr.random());
+```
+
 ## Algorithm Initialization
 
 The user initializes the class with an array of x,y pairs describing the desired distribution. Two consecutive pairs ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) and ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_n%2Cy_n%5Cright%5C%7D) form a trapezoid like so.
 
 ![trapezoid](docs/trapezoid.png)
-
 
 Where the height of two sides are ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20y_%7Bn-1%7D) and ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20y_n) respectively and the width is ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_n-x_%7Bn-1%7D)
 
@@ -22,7 +33,7 @@ We then go back and using the cumulative area of each pair and total area previo
 
 ## Generation Algorithm
 
-Given a uniform distributed random (```udr```) number from 0-1 we treat this as a percentage of the overall area of the nonuniform distribution curve (```ndc```) and try to find the value ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_%7Bpv%7D) where the area of the ```ndc``` to left is exactly that percentage of the total area.
+Given a uniform distributed random (```udr```) number from 0-1 we treat this as a percentage of the overall area of the nonuniform distribution curve (```ndc```) and try to find the value ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_%7Bpa%7D) where the ratio of the area of the ```ndc``` to left to the total area exactly matches the ```udr```.
 
 We do this by first determining which trapezoid that contains the area we are looking for. This will be the trapezoid formed by the consecutive pairs ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) and ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_n%2Cy_n%5Cright%5C%7D) where the ```cumDist``` of ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) is less than ```udr``` and the ```cumDist``` of ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_n%2Cy_n%5Cright%5C%7D) is greater than ```udr```. From there we calculate the target volume by multiplying the ```udr``` by the ```cumArea``` of the last pair in the ```ndc``` and then subtract the ```cumArea``` of the ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) pair to obtain the ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20A_%7Bpa%7D). This is the area of the trapezoid formed by the pairs ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) and ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bpa%7D%2Cy_%7Bpa%7D%5Cright%5C%7D) in the figure below.
 
