@@ -92,7 +92,7 @@ module.exports=NDRandom;
 
 
 //example:
-// const NDRandom=require('ndrandom')
+// const NDRandom=require('ndrand')
 // var x=new NDRandom([ {x:0,y:0},{x:0.5,y:1}, {x:1,y:0} ])
 // x.random();
 
