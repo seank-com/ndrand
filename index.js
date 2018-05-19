@@ -25,6 +25,7 @@ function NDRandom(ndc) {
       if (this.ndc[n].x <= this.ndc[n - 1].x) {
         this.err = new Error("Distribution pairs must be increasing");
       }
+      if(this.ndc[n].y>0&&this.ndc[n].y===this.ndc[n - 1].y)this.ndc[n].y*=1.000000000001; // add etta to same numbers
       // accumulate the area of the current trapezoid
       totalArea += (this.ndc[n].x - this.ndc[n - 1].x) * ((this.ndc[n].y + this.ndc[n - 1].y)/2);
       // save the area so far of all the trapezoids that have come before
@@ -44,7 +45,7 @@ NDRandom.prototype.getValue = function (udr) {
   'use strict';
 
   if (this.err) {
-    return err;
+    return this.err;
   } else {
     for(let n = 1; n < this.ndc.length; n += 1) {
       // if the uniform distribution value is
@@ -62,8 +63,9 @@ NDRandom.prototype.getValue = function (udr) {
           apa = (udr * this.ndc[this.ndc.length - 1].cumArea) - an1, // the target partial volume of the trapezoid
           a = m/2, // first coefficient of the quadratic equation
           b = yn1-(xn1 * m), // second coefficient of the quadratic equation
-          c = ((xn1 * xn1 * m/2) - (xn1 * yn1) - apa), // contant value of the quadratic equation
-          aos = (-1 * b) / (2 * a), // axis of symmetry
+          c = ((xn1 * xn1 * m/2) - (xn1 * yn1) - apa); // contant value of the quadratic equation
+		    if(a===0) return undefined; // prevent divide by zero in zero areas
+        let aos = (-1 * b) / (2 * a), // axis of symmetry
           distance = Math.sqrt((b * b) - (4 * a * c)) / (2 * a), // distance from aos
           xpa = aos - distance; // the partial x we are solving for
 
@@ -78,21 +80,37 @@ NDRandom.prototype.getValue = function (udr) {
   }
 };
 
-var ndr = null;
-exports.initialize = function(ndc) {
-  ndr = new NDRandom(ndc);
+NDRandom.prototype.random = function () {
+  for(let retry = 0; retry < 1000; retry++) {
+  	let result=this.getValue(Math.random())
+  	if(result!==undefined) return result;
+  }
+  return new Error("can't find a good tarpezoid, can't find a matching random number, too many retries.");
 }
 
-exports.getValue = function(udr) {
+module.exports=NDRandom;
+
+
+//example:
+// const NDRandom=require('ndrandom')
+// var x=new NDRandom([ {x:0,y:0},{x:0.5,y:1}, {x:1,y:0} ])
+// x.random();
+
+var ndr = null;
+exports.initialize = function(ndc) { // legacy
+ ndr = new NDRandom(ndc);
+}
+
+exports.getValue = function(udr) { // legacy
   if (ndr) {
     return ndr.getValue(udr);
   }
   return new Error("You must call initialize first");
 }
 
-exports.random = function () {
+exports.random = function () { // legacy
   if (ndr) {
-    return ndr.getValue(Math.random())
+    return ndr.random();
   }
   return new Error("You must call initialize first");
 }
