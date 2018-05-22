@@ -4,14 +4,8 @@ A class used to generate a nonuniform distribution of random numbers.
 ## Usage
 
 ```
-var ndr = require('ndrand');
-
-ndr.initialize([
-  {x:0,y:0},
-  {x:5,y:5},
-  {x:10,y:0},
-]);
-
+const NDRandom = require('ndrand');
+var ndr=new NDRandom([ {x:0,y:0},{x:0.5,y:1}, {x:1,y:0} ])
 console.log(ndr.random());
 ```
 
