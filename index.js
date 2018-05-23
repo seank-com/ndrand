@@ -25,9 +25,10 @@ function NDRandom(ndc) {
       if (this.ndc[n].x <= this.ndc[n - 1].x) {
         this.err = new Error("Distribution pairs must be increasing");
       }
-      if(this.ndc[n].y>0&&this.ndc[n].y===this.ndc[n - 1].y)this.ndc[n].y*=1.000000000001; // add etta to same numbers
-      // accumulate the area of the current trapezoid
-      totalArea += (this.ndc[n].x - this.ndc[n - 1].x) * ((this.ndc[n].y + this.ndc[n - 1].y)/2);
+      if (this.ndc[n].x !== 0 || this.ndc[n - 1].x !== 0) {
+        // accumulate the area of the current trapezoid if non-zero
+        totalArea += (this.ndc[n].x - this.ndc[n - 1].x) * ((this.ndc[n].y + this.ndc[n - 1].y)/2);
+      }
       // save the area so far of all the trapezoids that have come before
       this.ndc[n].cumArea = totalArea;
     }
@@ -58,43 +59,46 @@ NDRandom.prototype.getValue = function (udr) {
           yn1 = this.ndc[n - 1].y, // the y on the left side of the trapezoid
           xn = this.ndc[n].x, // the x on the right side of the trapezoid
           yn = this.ndc[n].y, // the y on the right side of the trapezoid
-          m = (yn - yn1)/(xn - xn1), // the slope of the top of the trapezoid
           an1 = this.ndc[n - 1].cumArea, // the cumulative area to the left
-          apa = (udr * this.ndc[this.ndc.length - 1].cumArea) - an1, // the target partial volume of the trapezoid
-          a = m/2, // first coefficient of the quadratic equation
-          b = yn1-(xn1 * m), // second coefficient of the quadratic equation
-          c = ((xn1 * xn1 * m/2) - (xn1 * yn1) - apa); // contant value of the quadratic equation
-		    if(a===0) return undefined; // prevent divide by zero in zero areas
-        let aos = (-1 * b) / (2 * a), // axis of symmetry
-          distance = Math.sqrt((b * b) - (4 * a * c)) / (2 * a), // distance from aos
-          xpa = aos - distance; // the partial x we are solving for
+          apa = (udr * this.ndc[this.ndc.length - 1].cumArea) - an1; // the target partial volume of the trapezoid
 
-        // one of these will be in the target range
-        // the other will not
-        if (xpa < xn1 || xpa > xn) {
-          xpa = aos + distance;
+        // do we have a trapizoid?
+        if ((yn - yn1) !== 0) {
+          let m = (yn - yn1)/(xn - xn1), // the slope of the top of the trapezoid
+            a = m/2, // first coefficient of the quadratic equation
+            b = yn1-(xn1 * m), // second coefficient of the quadratic equation
+            c = ((xn1 * xn1 * m/2) - (xn1 * yn1) - apa), // constant value of the quadratic equation
+            aos = (-1 * b) / (2 * a), // axis of symmetry
+            distance = Math.sqrt((b * b) - (4 * a * c)) / (2 * a), // distance from aos
+            xpa = aos - distance; // the partial x we are solving for
+  
+          // one of these will be in the target range
+          // the other will not
+          if (xpa < xn1 || xpa > xn) {
+            xpa = aos + distance;
+          }
+          return xpa;
+        } else {
+          // calculate the rectangle
+          let xpa = (apa / yn1) + xn1;
+
+          if (yn1 !== yn) {
+            return new Error("Segment is not a rectangle")
+          }
+
+          return xpa;          
         }
-        return xpa;
       }
     }
   }
 };
 
 NDRandom.prototype.random = function () {
-  for(let retry = 0; retry < 1000; retry++) {
-  	let result=this.getValue(Math.random())
-  	if(result!==undefined) return result;
-  }
-  return new Error("can't find a good tarpezoid, can't find a matching random number, too many retries.");
+  let result=this.getValue(Math.random());
+  return result;
 }
 
 module.exports=NDRandom;
-
-
-//example:
-// const NDRandom=require('ndrand')
-// var x=new NDRandom([ {x:0,y:0},{x:0.5,y:1}, {x:1,y:0} ])
-// x.random();
 
 var ndr = null;
 exports.initialize = function(ndc) { // legacy

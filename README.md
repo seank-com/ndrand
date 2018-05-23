@@ -5,7 +5,7 @@ A class used to generate a nonuniform distribution of random numbers.
 
 ```
 const NDRandom = require('ndrand');
-var ndr=new NDRandom([ {x:0,y:0},{x:0.5,y:1}, {x:1,y:0} ])
+var ndr=new NDRandom([{x:0,y:0}, {x:0.5,y:1}, {x:1,y:0}]);
 console.log(ndr.random());
 ```
 
@@ -21,7 +21,7 @@ The area of the trapeziod is the average of the two heights multiplied by the wi
 
 ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20A%3D%5Cleft%28%5Cfrac%7By_%7Bn-1%7D&plus;y_n%7D%7B2%7D%5Cright%29%5Cleft%28x_n-x_%7Bn-1%7D%5Cright%29)
 
-During initialization, we calculate the area of each trapezoid to obtain the total area of the distribution. Along the way we record the cumulative area (```cumArea```) at each pair. This represents the area of all trapezoids to the left of the current pair. As such, the cumulative area of the first pair is 0 and the cumulative area of the last pair is the total area of the distribution.
+During initialization, we calculate the area of each trapezoid to obtain the total area of the distribution. Along the way we record the cumulative area (```cumArea```) at each pair. This represents the area of all trapezoids to the left of the current pair. As such, the cumulative area of the first pair is 0 and the cumulative area of the last pair is the total area of the distribution. The latest version of this algorithm has been updated to handle non-contiguous distribution trapezoids so we carefully skip trapezoids with 0 area.
 
 We then go back and using the cumulative area of each pair and total area previously computed, calculate the cumulative distribution (```cumDist```) of each pair. The distribution represents the percentage of numbers in the distribution to the left of the current pair. Consequently, the cumulative distribution of the first pair is 0 and the cumulative distribution of the last pair is 1.0
 
@@ -29,11 +29,11 @@ We then go back and using the cumulative area of each pair and total area previo
 
 Given a uniform distributed random (```udr```) number from 0-1 we treat this as a percentage of the overall area of the nonuniform distribution curve (```ndc```) and try to find the value ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_%7Bpa%7D) where the ratio of the area of the ```ndc``` to left to the total area exactly matches the ```udr```.
 
-We do this by first determining which trapezoid that contains the area we are looking for. This will be the trapezoid formed by the consecutive pairs ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) and ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_n%2Cy_n%5Cright%5C%7D) where the ```cumDist``` of ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) is less than ```udr``` and the ```cumDist``` of ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_n%2Cy_n%5Cright%5C%7D) is greater than ```udr```. From there we calculate the target volume by multiplying the ```udr``` by the ```cumArea``` of the last pair in the ```ndc``` and then subtract the ```cumArea``` of the ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) pair to obtain the ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20A_%7Bpa%7D). This is the area of the trapezoid formed by the pairs ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) and ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bpa%7D%2Cy_%7Bpa%7D%5Cright%5C%7D) in the figure below.
+We do this by first determining which trapezoid contains the area we are looking for. This will be the trapezoid formed by the consecutive pairs ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) and ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_n%2Cy_n%5Cright%5C%7D) where the ```cumDist``` of ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) is less than ```udr``` and the ```cumDist``` of ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_n%2Cy_n%5Cright%5C%7D) is greater than ```udr```. From there we calculate the target volume by multiplying the ```udr``` by the ```cumArea``` of the last pair in the ```ndc``` and then subtract the ```cumArea``` of the ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) pair to obtain the ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20A_%7Bpa%7D). This is the area of the trapezoid formed by the pairs ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bn-1%7D%2Cy_%7Bn-1%7D%5Cright%5C%7D) and ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cleft%5C%7Bx_%7Bpa%7D%2Cy_%7Bpa%7D%5Cright%5C%7D) in the figure below.
 
 ![partial trapezoid](docs/partial_trapezoid.png)
 
-Given ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20A_%7Bpa%7D) we can calculate ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_%7Bpv%7D) using the the previous equation for the area of a trapezoid like so.
+Given ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20A_%7Bpa%7D) we can calculate ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_%7Bpa%7D) using the the previous equation for the area of a trapezoid like so.
 
 ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20A_%7Bpa%7D%3D%5Cleft%28%5Cfrac%7By_%7Bn-1%7D&plus;y_%7Bpa%7D%7D%7B2%7D%5Cright%29%5Cleft%28x_%7Bpa%7D-x_%7Bn-1%7D%5Cright%29) where ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20y_%7Bpa%7D%3D%5Cleft%28%5Cfrac%7By_n-y_%7Bn-1%7D%7D%7Bx_n-x_%7Bn-1%7D%7D%5Cright%29%5Cleft%28x_%7Bpa%7D-x_%7Bn-1%7D%5Cright%29&plus;y_%7Bn-1%7D)
 
@@ -66,3 +66,18 @@ thus we can solve for ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_
 The term ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cfrac%7B-b%7D%7B2a%7D) is called the axis of symetry (```aos```) whereas ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cfrac%7B%5Csqrt%7Bb%5E2-4ac%7D%7D%7B2a%7D) represents the distance (```distance```) from the ```aos```
 
 The algorithm will add or subtract the ```distance``` form the ```aos``` to find the value that falls between ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_%7Bn-1%7D) and ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_n)
+
+You'll notice that if the trapezoid is a rectangle then ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20m) will be 0 and throw off the math, so we handle this degenerate case with much easier math. Consider the trapezoid from above
+
+![partial trapezoid](docs/partial_trapezoid.png)
+
+In the case of a rectangle, ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20y_%7Bn-1%7D%20%3D%20y_%7Bpa%7D%20%3D%20y_%7Bn%7D)
+
+Given ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20A_%7Bpa%7D) we can calculate ![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_%7Bpa%7D) as follows:
+
+![math](https://latex.codecogs.com/svg.latex?%5Clarge%20A_%7Bpa%7D%3D%28x_%7Bpa%7D-x_%7Bn-1%7D%29y_%7Bpa%7D)
+
+![math](https://latex.codecogs.com/svg.latex?%5Clarge%20%5Cfrac%7BA_%7Bpa%7D%7D%7By_%7Bpa%7D%7D%20%3D%20x_%7Bpa%7D%20-%20x_%7Bn-1%7D)
+
+![math](https://latex.codecogs.com/svg.latex?%5Clarge%20x_%7Bpa%7D%20%3D%20%5Cfrac%7BA_%7Bpa%7D%7D%7By_%7Bpa%7D%7D%20&plus;%20x_%7Bn-1%7D)
+
